@@ -87,7 +87,7 @@ canvas{
   left:10px;
   bottom:10px;
   z-index:4;
-  width:190px;
+  width:238px;
   border:3px double var(--w);
   background:var(--b);
   color:var(--w);
@@ -139,8 +139,8 @@ canvas{
 }
 .radio-buttons{
   display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:6px;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:5px;
 }
 .radio-buttons button{
   padding:8px 4px;
@@ -158,7 +158,7 @@ canvas{
   .screen-radio{
     left:6px;
     bottom:6px;
-    width:170px;
+    width:218px;
     padding:6px;
   }
   .radio-speaker{
@@ -368,6 +368,7 @@ button:active{
         <div class="radio-buttons">
           <button id="screenSound" type="button">SFX ON</button>
           <button id="screenMusic" type="button">MUSIC ON</button>
+          <button id="screenSkip" type="button">SKIP</button>
         </div>
       </section>
 
@@ -407,6 +408,7 @@ button:active{
         <button id="cast">[ CAST / SPACE ]</button>
         <button id="sound">SFX: ON</button>
         <button id="music">MUSIC: ON</button>
+        <button id="skip">SKIP TRACK</button>
         <button id="reset">RESET</button>
       </section>
     </aside>
@@ -443,7 +445,9 @@ const ui={
   nowArtist:q("nowArtist"),
   screenTrack:q("screenTrack"),
   screenSound:q("screenSound"),
-  screenMusic:q("screenMusic")
+  screenMusic:q("screenMusic"),
+  screenSkip:q("screenSkip"),
+  skip:q("skip")
 };
 
 const W=640,H=480;
@@ -604,6 +608,27 @@ function toggleMusic(){
   }
 }
 
+function skipTrack(){
+  const wasStarted=musicStarted;
+
+  if(!musicOn){
+    musicOn=true;
+    syncAudioControls();
+  }
+
+  if(!wasStarted){
+    startMusic();
+  }else{
+    nextTrack();
+  }
+
+  bgm.volume=.34;
+  bgm.play().catch(()=>{});
+
+  const track=PLAYLIST[trackIndex];
+  eventLog("RADIO SKIP // "+track.title,"good");
+}
+
 function update(){
   ui.count.textContent=stats.n;
   ui.total.textContent=stats.total.toFixed(2);
@@ -651,6 +676,11 @@ function setTrack(index){
   ui.nowTrack.textContent=track.title;
   ui.nowArtist.textContent=track.artist;
   ui.screenTrack.textContent=track.title;
+
+  if(boat.active){
+    boat.label=track.title;
+    boat.artist=track.artist;
+  }
 
   bgm.pause();
   bgm.src=track.src;
@@ -808,8 +838,10 @@ window.addEventListener("keydown",e=>{
 
 ui.sound.addEventListener("click",toggleSound);
 ui.music.addEventListener("click",toggleMusic);
+ui.skip.addEventListener("click",skipTrack);
 ui.screenSound.addEventListener("click",toggleSound);
 ui.screenMusic.addEventListener("click",toggleMusic);
+ui.screenSkip.addEventListener("click",skipTrack);
 ui.reset.addEventListener("click",fullReset);
 
 function line(x1,y1,x2,y2,c,w=1){

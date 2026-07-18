@@ -1,0 +1,989 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>FISH.EXE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root{
+  --b:#0000aa;
+  --d:#000055;
+  --c:#00aaaa;
+  --w:#ffffff;
+  --k:#000000;
+  --g:#00aa00;
+  --l:#55ff55;
+  --r:#aa0000;
+  --rr:#ff5555;
+  --y:#ffff55;
+  --m:#aa00aa;
+  --x:#aaaaaa;
+  --font:"Press Start 2P",monospace;
+}
+*{box-sizing:border-box}
+html,body{
+  margin:0;
+  min-height:100%;
+  background:var(--b);
+  color:var(--w);
+  font-family:var(--font);
+}
+body{
+  display:flex;
+  justify-content:center;
+  padding:12px;
+}
+.shell{
+  width:min(1000px,100%);
+  border:4px double var(--w);
+  box-shadow:0 0 0 3px var(--k);
+  background:var(--b);
+}
+.top{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  padding:9px 10px;
+  background:var(--w);
+  color:var(--b);
+  font-size:11px;
+  line-height:1.4;
+}
+.main{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 280px;
+  gap:10px;
+  padding:10px;
+}
+.view{
+  position:relative;
+  border:3px solid var(--w);
+  background:#000;
+  min-width:0;
+}
+canvas{
+  display:block;
+  width:100%;
+  aspect-ratio:4/3;
+  image-rendering:pixelated;
+  image-rendering:crisp-edges;
+  touch-action:manipulation;
+  cursor:crosshair;
+}
+.scan{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    repeating-linear-gradient(0deg,rgba(0,0,0,.20) 0 1px,transparent 1px 3px),
+    repeating-linear-gradient(90deg,rgba(255,255,255,.025) 0 1px,transparent 1px 4px);
+}
+.side{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.panel{
+  border:3px double var(--w);
+  padding:8px;
+  min-width:0;
+}
+.panel h2{
+  margin:0 0 8px;
+  color:var(--y);
+  font-size:10px;
+  line-height:1.5;
+}
+.stat{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  margin:7px 0;
+  font-size:8px;
+  line-height:1.4;
+}
+.stat span{color:var(--x)}
+.stat b{color:var(--l);text-align:right}
+.now{
+  margin-top:10px;
+  padding-top:9px;
+  border-top:1px dashed var(--c);
+}
+.now-label{
+  color:var(--x);
+  font-size:7px;
+  margin-bottom:7px;
+}
+#nowTrack{
+  color:var(--w);
+  font-size:8px;
+  line-height:1.6;
+  overflow-wrap:anywhere;
+}
+#nowArtist{
+  color:var(--c);
+  font-size:7px;
+  line-height:1.5;
+  margin-top:4px;
+}
+.log-shell{
+  background:var(--k);
+  border:1px solid var(--c);
+  overflow:hidden;
+}
+.log-head{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 58px 64px;
+  gap:5px;
+  padding:8px 7px;
+  background:var(--c);
+  color:var(--k);
+  font-size:7px;
+  line-height:1.5;
+}
+#log{
+  height:190px;
+  overflow:auto;
+  scrollbar-color:var(--c) var(--k);
+}
+.catch-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 58px 64px;
+  gap:5px;
+  align-items:center;
+  padding:9px 7px;
+  border-bottom:1px dotted var(--d);
+  font-size:7px;
+  line-height:1.55;
+}
+.catch-row:last-child{border-bottom:0}
+.catch-row .fish{
+  color:var(--w);
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.catch-row .kg{
+  color:var(--l);
+  text-align:right;
+}
+.catch-row .ms{
+  color:var(--c);
+  text-align:right;
+}
+.catch-row.great{
+  background:rgba(255,255,85,.12);
+}
+.catch-row.great .fish,
+.catch-row.great .kg{
+  color:var(--y);
+}
+.event{
+  padding:8px 6px;
+  border-bottom:1px dotted var(--d);
+  color:var(--x);
+  font-size:7px;
+  line-height:1.7;
+}
+.event.bad{color:var(--rr)}
+.event.good{color:var(--l)}
+.buttons{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+button{
+  border:0;
+  outline:2px solid var(--w);
+  outline-offset:-3px;
+  background:var(--x);
+  color:var(--k);
+  font-family:var(--font);
+  font-size:7px;
+  line-height:1.5;
+  padding:10px 7px;
+  cursor:pointer;
+  box-shadow:inset -3px -3px #555,inset 3px 3px #fff;
+}
+button:active{
+  box-shadow:inset 3px 3px #555,inset -3px -3px #fff;
+  transform:translate(1px,1px);
+}
+#cast{
+  grid-column:1/-1;
+  background:var(--y);
+}
+.help{
+  border-top:2px solid var(--c);
+  padding:11px;
+  color:var(--x);
+  font-size:7px;
+  line-height:1.8;
+}
+.help b{color:var(--w)}
+.flash{animation:f .12s steps(2) 4}
+@keyframes f{50%{filter:invert(1)}}
+
+@media(max-width:780px){
+  .main{grid-template-columns:1fr}
+  .side{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+  }
+  .buttons{grid-column:1/-1}
+  #log{height:145px}
+}
+@media(max-width:540px){
+  body{padding:5px}
+  .shell{border-width:3px}
+  .main{padding:6px;gap:6px}
+  .side{display:flex}
+  .top{font-size:7px}
+  .panel{border-width:2px}
+  button{padding:12px 7px}
+  #log{height:170px}
+  .log-head,
+  .catch-row,
+  .event{
+    font-size:8px;
+  }
+  .log-head,
+  .catch-row{
+    grid-template-columns:minmax(0,1fr) 58px 66px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="top">
+    <span>FISH.EXE // TEMPLE LAKE</span>
+    <span id="clock">00:00:00</span>
+  </div>
+
+  <div class="main">
+    <div class="view" id="view">
+      <canvas id="game" width="640" height="480" aria-label="First-person fishing game"></canvas>
+      <div class="scan"></div>
+    </div>
+
+    <aside class="side">
+      <section class="panel">
+        <h2>:: SESSION DATA</h2>
+        <div class="stat"><span>STATE</span><b id="state">READY</b></div>
+        <div class="stat"><span>FISH</span><b id="count">0</b></div>
+        <div class="stat"><span>TOTAL KG</span><b id="total">0.00</b></div>
+        <div class="stat"><span>BEST KG</span><b id="best">0.00</b></div>
+        <div class="stat"><span>BEST REACT</span><b id="react">---</b></div>
+
+        <div class="now">
+          <div class="now-label">CANAL RADIO</div>
+          <div id="nowTrack">WAITING FOR INPUT</div>
+          <div id="nowArtist">FIELD UNIT</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>:: CATCH LOG</h2>
+        <div class="log-shell">
+          <div class="log-head">
+            <span>SPECIES</span><span>KG</span><span>REACT</span>
+          </div>
+          <div id="log" aria-live="polite">
+            <div class="event">LAKE PROCESS INITIALISED.</div>
+            <div class="event">CAST WHEN READY.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="buttons">
+        <button id="cast">[ CAST / SPACE ]</button>
+        <button id="sound">SFX: ON</button>
+        <button id="music">MUSIC: ON</button>
+        <button id="reset">RESET</button>
+      </section>
+    </aside>
+  </div>
+
+  <div class="help">
+    <b>HOW TO PLAY:</b> CAST, WAIT FOR THE FLOAT TO PLUNGE, THEN STRIKE.
+    QUICKER REACTIONS CATCH BIGGER FISH. FIELD UNIT DEMOS PLAY IN FULL. BOATS KEEP PASSING EVEN WHEN THE RADIO IS OFF.
+  </div>
+</div>
+
+<script>
+(()=>{
+"use strict";
+
+const q=id=>document.getElementById(id);
+const cv=q("game");
+const ctx=cv.getContext("2d");
+const view=q("view");
+
+const ui={
+  state:q("state"),
+  count:q("count"),
+  total:q("total"),
+  best:q("best"),
+  react:q("react"),
+  log:q("log"),
+  cast:q("cast"),
+  sound:q("sound"),
+  music:q("music"),
+  reset:q("reset"),
+  clock:q("clock"),
+  nowTrack:q("nowTrack"),
+  nowArtist:q("nowArtist")
+};
+
+const W=640,H=480;
+const C={
+  b:"#0000aa",d:"#000055",c:"#00aaaa",w:"#ffffff",k:"#000000",
+  g:"#00aa00",l:"#55ff55",r:"#aa0000",rr:"#ff5555",
+  y:"#ffff55",m:"#aa00aa",x:"#aaaaaa"
+};
+
+const PLAYLIST=[
+  {title:"NATURE OF FREAK",artist:"FIELD UNIT",src:"https://field-unit.github.io/Nature_of_Freak_Demo.mp3"},
+  {title:"NOMEMORY NOTREAL",artist:"FIELD UNIT",src:"https://field-unit.github.io/nomemory_notreal_mthree.mp3"},
+  {title:"THE OF THE",artist:"FIELD UNIT",src:"https://field-unit.github.io/the_of_the_demo.mp3"},
+  {title:"CURLEY CUH",artist:"FIELD UNIT",src:"https://field-unit.github.io/Curley_Cuh_Demo.mp3"},
+  {title:"POCKET MUCK",artist:"FIELD UNIT",src:"https://field-unit.github.io/Pocket_Muck_Demo.mp3"},
+  {title:"MEDIUM SLATE",artist:"FIELD UNIT",src:"https://field-unit.github.io/Medium_Slate_Demo.mp3"},
+  {title:"LAN_33",artist:"FIELD UNIT",src:"https://field-unit.github.io/LAN_33_Demo.mp3"},
+  {title:"NAVVY",artist:"FIELD UNIT",src:"https://field-unit.github.io/Navvy_Demo.mp3"},
+  {title:"LBD+M3",artist:"FIELD UNIT",src:"https://field-unit.github.io/lbd_m3_demo.mp3"}
+];
+
+const BOAT_MESSAGES=[
+  "NO HERONS BEYOND THIS POINT",
+  "SLOW BOAT // FAST BASS",
+  "MIND THE GOOSE",
+  "DREDGING FOR ANSWERS",
+  "LOCK GATE APPRECIATION CLUB",
+  "BARGE IN CHARGE",
+  "UNLICENSED TOWPATH ENERGY",
+  "ABSOLUTELY NO JAZZ",
+  "CANAL WATER: DO NOT SIP",
+  "FLOAT FIRST // THINK LATER",
+  "BRICK DUST FM",
+  "MOTORWAY SERVICES AHEAD",
+  "QUIET PLEASE // FISH THINKING",
+  "THIS BOAT KNOWS TOO MUCH",
+  "MIDLANDS WEATHER UNIT",
+  "NO SIGNAL // NICE DAY"
+];
+
+let mode="ready";
+let biteTimer=null;
+let escapeTimer=null;
+let biteAt=0;
+let bob={x:420,y:285,base:285,p:0};
+let caught=null;
+let caughtAt=0;
+let shake=0;
+
+let soundOn=true;
+let musicOn=true;
+let ac=null;
+let stats={n:0,total:0,best:0,react:null};
+
+let musicStarted=false;
+let trackIndex=0;
+let bgm=new Audio();
+bgm.preload="auto";
+bgm.volume=.34;
+
+let boat={
+  x:W+100,
+  y:237,
+  start:0,
+  duration:14500,
+  active:false,
+  gapUntil:now()+1200,
+  label:"",
+  artist:""
+};
+
+const now=()=>performance.now();
+const pick=a=>a[(Math.random()*a.length)|0];
+
+function font(size){
+  return `${size}px "Press Start 2P", monospace`;
+}
+
+function ensureAudio(){
+  if(!soundOn)return null;
+  if(!ac){
+    const A=window.AudioContext||window.webkitAudioContext;
+    if(!A)return null;
+    ac=new A();
+  }
+  if(ac.state==="suspended")ac.resume();
+  return ac;
+}
+
+function beep(f=440,d=.08,v=.05,slide=0){
+  const a=ensureAudio();
+  if(!a)return;
+  const o=a.createOscillator();
+  const g=a.createGain();
+  o.type="square";
+  o.frequency.setValueAtTime(f,a.currentTime);
+  o.frequency.linearRampToValueAtTime(f+slide,a.currentTime+d);
+  g.gain.setValueAtTime(v,a.currentTime);
+  g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+d);
+  o.connect(g).connect(a.destination);
+  o.start();
+  o.stop(a.currentTime+d);
+}
+
+function eventLog(text,cls=""){
+  const row=document.createElement("div");
+  row.className=`event ${cls}`.trim();
+  row.textContent=text;
+  ui.log.prepend(row);
+  trimLog();
+}
+
+function catchLog(sp,kg,ms){
+  const row=document.createElement("div");
+  row.className=`catch-row ${kg>=10?"great":""}`.trim();
+  row.innerHTML=`
+    <span class="fish">${sp.toUpperCase()}</span>
+    <span class="kg">${kg.toFixed(2)}</span>
+    <span class="ms">${Math.round(ms)}MS</span>`;
+  ui.log.prepend(row);
+  trimLog();
+}
+
+function trimLog(){
+  while(ui.log.children.length>12){
+    ui.log.removeChild(ui.log.lastChild);
+  }
+}
+
+function update(){
+  ui.count.textContent=stats.n;
+  ui.total.textContent=stats.total.toFixed(2);
+  ui.best.textContent=stats.best.toFixed(2);
+  ui.react.textContent=stats.react===null?"---":Math.round(stats.react)+"MS";
+}
+
+function state(s){ui.state.textContent=s}
+
+function clearRoundTimers(){
+  clearTimeout(biteTimer);
+  clearTimeout(escapeTimer);
+  biteTimer=null;
+  escapeTimer=null;
+}
+
+function ready(){
+  clearRoundTimers();
+  mode="ready";
+  bob.p=0;
+  caught=null;
+  state("READY");
+  ui.cast.textContent="[ CAST / SPACE ]";
+}
+
+function fullReset(){
+  stats={n:0,total:0,best:0,react:null};
+  update();
+  ui.log.innerHTML="";
+  eventLog("SESSION CLEARED.");
+  ready();
+}
+
+function startMusic(){
+  if(musicStarted)return;
+  musicStarted=true;
+  setTrack(0);
+  spawnBoat();
+}
+
+function setTrack(index){
+  trackIndex=(index+PLAYLIST.length)%PLAYLIST.length;
+  const track=PLAYLIST[trackIndex];
+
+  ui.nowTrack.textContent=track.title;
+  ui.nowArtist.textContent=track.artist;
+
+  bgm.pause();
+  bgm.src=track.src;
+  bgm.currentTime=0;
+  bgm.volume=musicOn?.34:0;
+
+  if(musicOn){
+    bgm.play().catch(()=>{
+      ui.nowTrack.textContent="TAP TO START RADIO";
+    });
+  }
+}
+
+function nextTrack(){
+  setTrack(trackIndex+1);
+}
+
+function spawnBoat(){
+  boat.active=true;
+  boat.start=now();
+  boat.x=W+110;
+  boat.gapUntil=0;
+
+  const trackIsPlaying=musicOn&&musicStarted&&!bgm.paused&&!bgm.ended&&bgm.src;
+  if(trackIsPlaying){
+    const track=PLAYLIST[trackIndex];
+    boat.label=track.title;
+    boat.artist=track.artist;
+  }else{
+    boat.label=pick(BOAT_MESSAGES);
+    boat.artist=pick(["CANAL SYSTEM","NO SIGNAL","TOWPATH UNIT","BARGE CONTROL"]);
+  }
+}
+
+bgm.addEventListener("ended",()=>{
+  if(musicOn)nextTrack();
+});
+
+function cast(){
+  startMusic();
+
+  if(mode==="waiting"){
+    clearRoundTimers();
+    mode="missed";
+    state("SPOOKED");
+    eventLog("TOO EARLY. FISH SPOOKED.","bad");
+    beep(130,.18,.05,-60);
+    shake=6;
+    setTimeout(ready,900);
+    return;
+  }
+
+  if(mode==="bite"){
+    strike();
+    return;
+  }
+
+  if(mode!=="ready")return;
+
+  mode="waiting";
+  state("WAIT...");
+  ui.cast.textContent="[ STRIKE ]";
+
+  bob.x=330+Math.random()*155;
+  bob.base=270+Math.random()*35;
+  bob.p=Math.random()*10;
+
+  eventLog("LINE CAST. MONITORING FLOAT.");
+  beep(240,.06,.025,70);
+
+  biteTimer=setTimeout(beginBite,1600+Math.random()*4300);
+}
+
+function beginBite(){
+  if(mode!=="waiting")return;
+
+  mode="bite";
+  biteAt=now();
+  state("BITE!");
+  view.classList.add("flash");
+  setTimeout(()=>view.classList.remove("flash"),520);
+  beep(820,.06,.07,-180);
+  shake=4;
+
+  escapeTimer=setTimeout(()=>{
+    if(mode!=="bite")return;
+    mode="missed";
+    state("ESCAPED");
+    eventLog("MISSED BITE. SIGNAL LOST.","bad");
+    beep(110,.23,.04,-40);
+    setTimeout(ready,1000);
+  },1150);
+}
+
+function weight(ms){
+  const skill=Math.max(0,1-Math.min(ms,1100)/1100);
+  const luck=.88+Math.random()*.24;
+  let kg=.18+Math.pow(skill,1.75)*17.8*luck;
+  if(ms<95)kg+=1.4+Math.random()*1.7;
+  return Math.max(.12,Math.min(21.5,kg));
+}
+
+function species(kg){
+  if(kg>15)return pick(["void sturgeon","temple pike","kernel carp"]);
+  if(kg>9)return pick(["mirror carp","northern pike","ghost catfish"]);
+  if(kg>4)return pick(["tench","bream","river bass"]);
+  if(kg>1.2)return pick(["perch","roach","small chub"]);
+  return pick(["minnow","tiny dace","bootlace eel"]);
+}
+
+function strike(){
+  clearTimeout(escapeTimer);
+
+  const ms=now()-biteAt;
+  const kg=weight(ms);
+  const sp=species(kg);
+
+  stats.n++;
+  stats.total+=kg;
+  stats.best=Math.max(stats.best,kg);
+  if(stats.react===null||ms<stats.react)stats.react=ms;
+  update();
+
+  caught={kg,sp,ms};
+  caughtAt=now();
+  mode="caught";
+  state("LANDED");
+  shake=7;
+
+  catchLog(sp,kg,ms);
+
+  beep(330,.08,.05,220);
+  setTimeout(()=>beep(550,.10,.045,180),90);
+  setTimeout(()=>beep(780,.16,.04,-80),200);
+  setTimeout(ready,2700);
+}
+
+function act(){
+  startMusic();
+  if(["ready","waiting","bite"].includes(mode))cast();
+}
+
+ui.cast.addEventListener("click",act);
+cv.addEventListener("pointerdown",e=>{
+  e.preventDefault();
+  act();
+});
+window.addEventListener("keydown",e=>{
+  if(e.code==="Space"){
+    e.preventDefault();
+    act();
+  }
+});
+
+ui.sound.addEventListener("click",()=>{
+  soundOn=!soundOn;
+  ui.sound.textContent="SFX: "+(soundOn?"ON":"OFF");
+  if(soundOn)beep(500,.06);
+});
+
+ui.music.addEventListener("click",()=>{
+  musicOn=!musicOn;
+  ui.music.textContent="MUSIC: "+(musicOn?"ON":"OFF");
+
+  if(musicOn){
+    startMusic();
+    bgm.volume=.34;
+    bgm.play().catch(()=>{});
+  }else{
+    bgm.pause();
+  }
+});
+
+ui.reset.addEventListener("click",fullReset);
+
+function line(x1,y1,x2,y2,c,w=1){
+  ctx.strokeStyle=c;
+  ctx.lineWidth=w;
+  ctx.beginPath();
+  ctx.moveTo(x1+.5,y1+.5);
+  ctx.lineTo(x2+.5,y2+.5);
+  ctx.stroke();
+}
+
+function drawBoat(t){
+  if(!boat.active){
+    if(now()>=boat.gapUntil)spawnBoat();
+    else return;
+  }
+
+  const elapsed=now()-boat.start;
+  const progress=Math.min(1,elapsed/boat.duration);
+  const x=W+110-progress*(W+350);
+  const y=boat.y+Math.sin(t*.0022)*2;
+  boat.x=x;
+
+  if(progress>=1){
+    boat.active=false;
+    boat.gapUntil=now()+3200;
+    return;
+  }
+
+  const track={title:boat.label,artist:boat.artist};
+
+  ctx.save();
+  ctx.translate(Math.round(x),Math.round(y));
+
+  // Wake.
+  ctx.fillStyle=C.w;
+  ctx.fillRect(205,31,28,2);
+  ctx.fillRect(218,35,42,2);
+  ctx.fillRect(229,39,34,2);
+
+  // Hull.
+  ctx.fillStyle=C.k;
+  ctx.fillRect(0,0,214,38);
+  ctx.fillStyle=C.r;
+  ctx.fillRect(4,4,206,29);
+  ctx.fillStyle=C.y;
+  ctx.fillRect(10,10,193,17);
+  ctx.fillStyle=C.d;
+  ctx.fillRect(0,33,214,10);
+  ctx.fillStyle=C.w;
+  ctx.fillRect(22,-13,94,13);
+  ctx.fillStyle=C.c;
+  ctx.fillRect(31,-9,17,7);
+  ctx.fillRect(54,-9,17,7);
+  ctx.fillRect(77,-9,17,7);
+  ctx.fillStyle=C.k;
+  ctx.fillRect(108,-26,10,26);
+  ctx.fillStyle=C.x;
+  ctx.fillRect(111,-33,4,8);
+
+  // Bow and stern steps.
+  ctx.fillStyle=C.k;
+  ctx.fillRect(-10,10,10,23);
+  ctx.fillRect(214,15,12,18);
+
+  // Name board on side.
+  ctx.fillStyle=C.k;
+  ctx.fillRect(13,12,185,13);
+  ctx.font=font(6);
+  ctx.textBaseline="top";
+  ctx.fillStyle=C.w;
+  const title=track.title.length>27?track.title.slice(0,27):track.title;
+  ctx.font=font(track.title.length>22?5:6);
+  ctx.fillText(title,18,15);
+
+  // Artist plate.
+  ctx.fillStyle=C.c;
+  ctx.fillRect(126,-11,74,9);
+  ctx.fillStyle=C.k;
+  ctx.font=font(5);
+  ctx.fillText(track.artist,130,-8);
+
+  ctx.restore();
+}
+
+function scene(t){
+  const sx=shake?(Math.random()*2-1)*shake:0;
+  const sy=shake?(Math.random()*2-1)*shake:0;
+  shake*=.86;
+  if(shake<.05)shake=0;
+
+  ctx.save();
+  ctx.translate(sx,sy);
+
+  // Sky.
+  ctx.fillStyle=C.b;
+  ctx.fillRect(0,0,W,H);
+
+  // Block clouds.
+  for(let i=0;i<13;i++){
+    const x=(i*83+Math.sin(t*.00008+i)*45)%760-60;
+    const y=55+(i%4)*26;
+    ctx.fillStyle=i%3?C.c:C.w;
+    ctx.fillRect(Math.round(x/8)*8,Math.round(y/8)*8,48+(i%3)*16,8);
+    if(i%2===0){
+      ctx.fillRect(Math.round((x+16)/8)*8,Math.round((y-8)/8)*8,24,8);
+    }
+  }
+
+  // Bank and water.
+  ctx.fillStyle=C.d;
+  ctx.fillRect(0,170,W,310);
+  ctx.fillStyle=C.g;
+  ctx.fillRect(0,175,W,42);
+  ctx.fillStyle=C.l;
+
+  for(let x=0;x<W;x+=11){
+    const h=7+(x*17)%19;
+    ctx.fillRect(x,175-h,2,h);
+  }
+
+  ctx.fillStyle=C.c;
+  ctx.fillRect(0,215,W,265);
+  ctx.fillStyle=C.b;
+
+  for(let y=222;y<480;y+=15){
+    const o=(t*.018+y*3)%54|0;
+    for(let x=-o;x<W;x+=54){
+      ctx.fillRect(x,y,12+Math.abs((x+y)%29),3);
+    }
+  }
+
+  ctx.fillStyle=C.w;
+  for(let y=230;y<470;y+=34){
+    const o=(t*.011+y)%71|0;
+    for(let x=-o;x<W;x+=86){
+      ctx.fillRect(x,y,20+y%17,2);
+    }
+  }
+
+  // Music boat behind the player equipment.
+  drawBoat(t);
+
+  // Rod.
+  ctx.strokeStyle=C.y;
+  ctx.lineWidth=9;
+  ctx.beginPath();
+  ctx.moveTo(625,474);
+  ctx.quadraticCurveTo(590,300,512,120);
+  ctx.stroke();
+  ctx.strokeStyle=C.r;
+  ctx.lineWidth=3;
+  ctx.stroke();
+
+  let by=bob.base;
+  if(mode==="waiting")by+=Math.sin(t*.004+bob.p)*3;
+  if(mode==="bite")by+=30+Math.sin((now()-biteAt)*.04)*6;
+  if(mode==="caught")by-=18;
+  bob.y=by;
+
+  line(512,120,bob.x,bob.y-9,C.w,1);
+
+  // First-person hand.
+  ctx.fillStyle=C.w;
+  ctx.fillRect(576,398,64,58);
+  ctx.fillStyle=C.x;
+  ctx.fillRect(560,421,44,42);
+  ctx.fillStyle=C.m;
+  ctx.fillRect(575,439,65,18);
+
+  // Float ripples.
+  ctx.strokeStyle=C.w;
+  ctx.lineWidth=2;
+  for(let i=0;i<3;i++){
+    const r=(mode==="bite"?30:13)+i*9+Math.sin(t*.006+i)*3;
+    ctx.beginPath();
+    ctx.ellipse(bob.x,bob.y+10,r,Math.max(2,r*.18),0,0,Math.PI*2);
+    ctx.stroke();
+  }
+
+  // Float.
+  ctx.fillStyle=C.k;
+  ctx.fillRect(Math.round(bob.x)-5,Math.round(bob.y)-20,10,31);
+  ctx.fillStyle=C.r;
+  ctx.fillRect(Math.round(bob.x)-4,Math.round(bob.y)-18,8,11);
+  ctx.fillStyle=C.w;
+  ctx.fillRect(Math.round(bob.x)-4,Math.round(bob.y)-7,8,9);
+
+  hud(t);
+
+  if(mode==="caught"&&caught){
+    catchCard(caught);
+  }
+
+  grain(t);
+  ctx.restore();
+}
+
+function hud(t){
+  ctx.font=font(8);
+  ctx.textBaseline="top";
+  ctx.fillStyle=C.k;
+  ctx.fillRect(8,8,314,55);
+  ctx.strokeStyle=C.w;
+  ctx.strokeRect(8.5,8.5,314,55);
+
+  ctx.fillStyle=C.y;
+  ctx.fillText("TEMPLE LAKE // SECTOR 07",18,17);
+
+  let s="PRESS SPACE TO CAST";
+  if(mode==="waiting")s="FLOAT ACTIVE // WAIT";
+  if(mode==="bite")s="!!! STRIKE NOW !!!";
+  if(mode==="caught")s="CATCH VERIFIED";
+  if(mode==="missed")s="SIGNAL LOST";
+
+  ctx.fillStyle=mode==="bite"&&((t/100|0)%2===0)?C.rr:C.w;
+  ctx.fillText(s,18,40);
+}
+
+function rank(ms){
+  if(ms<100)return"DIVINE REFLEX";
+  if(ms<180)return"LIGHTNING";
+  if(ms<300)return"SHARP";
+  if(ms<520)return"STEADY";
+  if(ms<800)return"SLOW";
+  return"LAST MOMENT";
+}
+
+function catchCard(c){
+  const rise=Math.min(1,(now()-caughtAt)/420);
+  const y=350-rise*145;
+  const size=44+Math.min(100,c.kg*5);
+
+  ctx.fillStyle=C.k;
+  ctx.fillRect(94,310,452,135);
+  ctx.strokeStyle=C.y;
+  ctx.lineWidth=3;
+  ctx.strokeRect(94.5,310.5,452,135);
+
+  ctx.save();
+  ctx.translate(320,y);
+  ctx.scale(size/100,size/100);
+  ctx.fillStyle=C.l;
+  ctx.beginPath();
+  ctx.ellipse(0,0,62,25,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(-54,0);
+  ctx.lineTo(-92,-32);
+  ctx.lineTo(-84,0);
+  ctx.lineTo(-92,32);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle=C.k;
+  ctx.fillRect(35,-8,6,6);
+  ctx.restore();
+
+  ctx.font=font(8);
+  ctx.fillStyle=C.y;
+  ctx.fillText(c.sp.toUpperCase(),116,329);
+  ctx.fillStyle=C.w;
+  ctx.fillText(`${c.kg.toFixed(2)} KG`,116,358);
+  ctx.fillText(`${Math.round(c.ms)} MS`,116,385);
+  ctx.fillStyle=C.c;
+  ctx.fillText("RANK: "+rank(c.ms),116,412);
+}
+
+function grain(t){
+  ctx.globalAlpha=.18;
+  ctx.fillStyle=C.w;
+  const p=(t/80|0)%4;
+
+  for(let y=p;y<H;y+=4){
+    for(let x=(y+p)%5;x<W;x+=11){
+      if((x*17+y*13+p*7)%23<5){
+        ctx.fillRect(x,y,1,1);
+      }
+    }
+  }
+
+  ctx.globalAlpha=1;
+}
+
+function loop(t){
+  scene(t);
+  requestAnimationFrame(loop);
+}
+
+function clock(){
+  const d=new Date();
+  ui.clock.textContent=[d.getHours(),d.getMinutes(),d.getSeconds()]
+    .map(v=>String(v).padStart(2,"0"))
+    .join(":");
+}
+
+update();
+clock();
+setInterval(clock,1000);
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

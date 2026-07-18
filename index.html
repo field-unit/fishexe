@@ -665,7 +665,7 @@ function fullReset(){
 function startMusic(){
   if(musicStarted)return;
   musicStarted=true;
-  setTrack(0);
+  setTrack(Math.floor(Math.random()*PLAYLIST.length));
   spawnBoat();
 }
 

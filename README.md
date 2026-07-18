@@ -1,6 +1,7 @@
-# FISH.EXE — skip-track update
+# FISH.EXE — random opening track update
 
-Upload `index.html` and `.nojekyll` to the root of the existing `fish-exe`
-repository, replacing the old `index.html`.
+Replace the current `index.html` in the `fish-exe` repository.
 
-The on-screen radio and side panel now both include SKIP controls.
+Each fresh page load now chooses a random Field Unit demo as the first track.
+The canal boat displays that selected track, and the playlist then continues
+in order from that point.
